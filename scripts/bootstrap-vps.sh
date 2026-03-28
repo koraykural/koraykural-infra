@@ -22,14 +22,14 @@ if [ ! -d "$INFRA_DIR" ]; then
   git clone git@github.com:koraykural/koraykural-infra.git "$INFRA_DIR"
 fi
 
-echo "==> Obtaining wildcard SSL certificate"
+echo "==> Obtaining SSL certificate for main domain"
 certbot certonly \
   --standalone \
   --non-interactive \
   --agree-tos \
   --email "$EMAIL" \
   -d "$DOMAIN" \
-  -d "*.$DOMAIN"
+  -d "www.$DOMAIN"
 
 echo "==> Symlinking nginx configs (skipping templates)"
 for conf in "$INFRA_DIR"/nginx/*.conf; do
