@@ -22,9 +22,20 @@ if [ ! -d "$INFRA_DIR" ]; then
   git clone git@github.com:koraykural/koraykural-infra.git "$INFRA_DIR"
 fi
 
-echo "==> Symlinking nginx configs"
+echo "==> Obtaining wildcard SSL certificate"
+certbot certonly \
+  --standalone \
+  --non-interactive \
+  --agree-tos \
+  --email "$EMAIL" \
+  -d "$DOMAIN" \
+  -d "*.$DOMAIN"
+
+echo "==> Symlinking nginx configs (skipping templates)"
 for conf in "$INFRA_DIR"/nginx/*.conf; do
   name=$(basename "$conf")
+  # skip template files
+  [[ "$name" == _template* ]] && continue
   ln -sf "$conf" "$NGINX_CONF_DIR/$name"
   ln -sf "$NGINX_CONF_DIR/$name" "$NGINX_ENABLED_DIR/$name"
 done
@@ -34,18 +45,6 @@ echo "==> Testing nginx config"
 nginx -t
 
 echo "==> Reloading nginx"
-systemctl reload nginx
-
-echo "==> Obtaining wildcard SSL certificate"
-certbot certonly \
-  --nginx \
-  --non-interactive \
-  --agree-tos \
-  --email "$EMAIL" \
-  -d "$DOMAIN" \
-  -d "*.$DOMAIN"
-
-echo "==> Reloading nginx with SSL"
 systemctl reload nginx
 
 echo "==> Done. Visit https://$DOMAIN to verify."
