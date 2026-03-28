@@ -10,9 +10,9 @@ echo "==> Pulling latest infra"
 git -C "$INFRA_DIR" pull
 
 echo "==> Testing nginx config"
-nginx -t
+sudo nginx -t
 
 echo "==> Reloading nginx"
-systemctl reload nginx
+sudo systemctl reload nginx
 
 echo "==> Done."
