@@ -40,6 +40,18 @@ nano bootstrap-vps.sh   # paste contents of scripts/bootstrap-vps.sh
 bash bootstrap-vps.sh
 ```
 
+Then create the `deploy` user for GitHub Actions:
+
+```bash
+useradd -m -s /bin/bash deploy
+mkdir -p /home/deploy/.ssh
+cp ~/.ssh/authorized_keys /home/deploy/.ssh/
+chown -R deploy:deploy /home/deploy/.ssh
+chmod 700 /home/deploy/.ssh
+chmod 600 /home/deploy/.ssh/authorized_keys
+echo "deploy ALL=(ALL) NOPASSWD: /usr/sbin/nginx, /bin/systemctl reload nginx, /bin/systemctl restart nginx" > /etc/sudoers.d/deploy
+```
+
 ## Adding a new project
 
 **Static site:**
