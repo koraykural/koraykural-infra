@@ -84,3 +84,4 @@ jobs:
           target: ${{ steps.target.outputs.path }}
           strip_components: 1
           rm: true
+          debug: true
