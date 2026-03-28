@@ -22,32 +22,42 @@ if [ ! -d "$INFRA_DIR" ]; then
   git clone git@github.com:koraykural/koraykural-infra.git "$INFRA_DIR"
 fi
 
-echo "==> Symlinking nginx configs (skipping templates)"
-for conf in "$INFRA_DIR"/nginx/*.conf; do
-  name=$(basename "$conf")
-  # skip template files
-  [[ "$name" == _template* ]] && continue
-  ln -sf "$conf" "$NGINX_CONF_DIR/$name"
-  ln -sf "$NGINX_CONF_DIR/$name" "$NGINX_ENABLED_DIR/$name"
-done
+echo "==> Deploying temporary HTTP-only nginx config to obtain certificate"
+cat > "$NGINX_CONF_DIR/bootstrap-temp.conf" <<EOF
+server {
+    listen 80;
+    server_name $DOMAIN www.$DOMAIN;
+    root /var/www/$DOMAIN;
+    location / { try_files \$uri \$uri/ =404; }
+}
+EOF
+ln -sf "$NGINX_CONF_DIR/bootstrap-temp.conf" "$NGINX_ENABLED_DIR/bootstrap-temp.conf"
 rm -f "$NGINX_ENABLED_DIR/default"
-
-echo "==> Testing nginx config"
 nginx -t
-
-echo "==> Reloading nginx"
 systemctl reload nginx
 
-echo "==> Obtaining SSL certificate for main domain"
+echo "==> Obtaining SSL certificate"
 certbot certonly \
-  --nginx \
+  --webroot \
+  --webroot-path /var/www/$DOMAIN \
   --non-interactive \
   --agree-tos \
   --email "$EMAIL" \
   -d "$DOMAIN" \
   -d "www.$DOMAIN"
 
-echo "==> Reloading nginx with SSL"
+echo "==> Removing temporary config and deploying real nginx configs"
+rm -f "$NGINX_ENABLED_DIR/bootstrap-temp.conf"
+rm -f "$NGINX_CONF_DIR/bootstrap-temp.conf"
+
+for conf in "$INFRA_DIR"/nginx/*.conf; do
+  name=$(basename "$conf")
+  [[ "$name" == _template* ]] && continue
+  ln -sf "$conf" "$NGINX_CONF_DIR/$name"
+  ln -sf "$NGINX_CONF_DIR/$name" "$NGINX_ENABLED_DIR/$name"
+done
+
+nginx -t
 systemctl reload nginx
 
 echo "==> Done. Visit https://$DOMAIN to verify."
