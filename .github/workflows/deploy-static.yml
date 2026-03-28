@@ -21,18 +21,18 @@ on:
         required: true
         type: string
       build_command:
-        description: 'Build command to run'
+        description: "Build command to run"
         required: false
-        default: 'npm run build'
+        default: "npm run build"
         type: string
       dist_dir:
-        description: 'Directory containing built files'
+        description: "Directory containing built files"
         required: false
-        default: 'dist'
+        default: "dist"
         type: string
       node_version:
         required: false
-        default: '20'
+        default: "20"
         type: string
     secrets:
       VPS_HOST:
@@ -54,6 +54,16 @@ jobs:
       - run: npm ci
 
       - run: ${{ inputs.build_command }}
+
+      - name: Pre-compress assets
+        run: |
+          find ${{ inputs.dist_dir }} -type f \( \
+            -name "*.html" -o -name "*.css" -o -name "*.js" \
+            -o -name "*.json" -o -name "*.svg" -o -name "*.xml" \
+            -o -name "*.txt" \
+          \) | while read f; do
+            gzip -k -9 "$f"
+          done
 
       - name: Determine target path
         id: target
