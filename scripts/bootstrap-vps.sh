@@ -19,7 +19,7 @@ mkdir -p /var/www/$DOMAIN
 
 echo "==> Cloning infra repo"
 if [ ! -d "$INFRA_DIR" ]; then
-  git clone https://github.com/koraykural/koraykural-infra.git "$INFRA_DIR"
+  git clone git@github.com:koraykural/koraykural-infra.git "$INFRA_DIR"
 fi
 
 echo "==> Symlinking nginx configs"
