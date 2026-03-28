@@ -22,15 +22,6 @@ if [ ! -d "$INFRA_DIR" ]; then
   git clone git@github.com:koraykural/koraykural-infra.git "$INFRA_DIR"
 fi
 
-echo "==> Obtaining SSL certificate for main domain"
-certbot certonly \
-  --standalone \
-  --non-interactive \
-  --agree-tos \
-  --email "$EMAIL" \
-  -d "$DOMAIN" \
-  -d "www.$DOMAIN"
-
 echo "==> Symlinking nginx configs (skipping templates)"
 for conf in "$INFRA_DIR"/nginx/*.conf; do
   name=$(basename "$conf")
@@ -45,6 +36,18 @@ echo "==> Testing nginx config"
 nginx -t
 
 echo "==> Reloading nginx"
+systemctl reload nginx
+
+echo "==> Obtaining SSL certificate for main domain"
+certbot certonly \
+  --nginx \
+  --non-interactive \
+  --agree-tos \
+  --email "$EMAIL" \
+  -d "$DOMAIN" \
+  -d "www.$DOMAIN"
+
+echo "==> Reloading nginx with SSL"
 systemctl reload nginx
 
 echo "==> Done. Visit https://$DOMAIN to verify."
