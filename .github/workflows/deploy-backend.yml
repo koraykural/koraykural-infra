@@ -1,0 +1,56 @@
+name: Deploy backend app
+
+# Reusable workflow — call from a project repo:
+#
+#   jobs:
+#     deploy:
+#       uses: koraykural/koraykural-infra/.github/workflows/deploy-backend.yml@main
+#       with:
+#         subdomain: someapp
+#         pm2_name: someapp
+#         app_dir: /var/www/someapp.koraykural.com
+#       secrets:
+#         VPS_HOST: ${{ secrets.VPS_HOST }}
+#         VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+
+on:
+  workflow_call:
+    inputs:
+      subdomain:
+        description: 'Subdomain (without .koraykural.com)'
+        required: true
+        type: string
+      pm2_name:
+        description: 'PM2 process name'
+        required: true
+        type: string
+      app_dir:
+        description: 'Absolute path to app directory on VPS'
+        required: false
+        default: ''
+        type: string
+    secrets:
+      VPS_HOST:
+        required: true
+      VPS_SSH_KEY:
+        required: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy on VPS
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: deploy
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            DIR="${{ inputs.app_dir }}"
+            if [ -z "$DIR" ]; then
+              DIR="/var/www/${{ inputs.subdomain }}.koraykural.com"
+            fi
+            cd "$DIR"
+            git pull
+            npm ci --omit=dev
+            pm2 restart ${{ inputs.pm2_name }}

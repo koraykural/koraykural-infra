@@ -1,0 +1,19 @@
+name: Apply nginx config
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'nginx/**'
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Apply nginx config on VPS
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: deploy
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: bash /var/www/infra/scripts/apply-nginx.sh

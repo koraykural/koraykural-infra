@@ -1,0 +1,76 @@
+name: Deploy static site
+
+# Reusable workflow — call from a project repo:
+#
+#   jobs:
+#     deploy:
+#       uses: koraykural/koraykural-infra/.github/workflows/deploy-static.yml@main
+#       with:
+#         subdomain: sorting          # → sorting.koraykural.com
+#         build_command: npm run build
+#         dist_dir: dist
+#       secrets:
+#         VPS_HOST: ${{ secrets.VPS_HOST }}
+#         VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+
+on:
+  workflow_call:
+    inputs:
+      subdomain:
+        description: 'Subdomain (without .koraykural.com). Use "root" for the main domain.'
+        required: true
+        type: string
+      build_command:
+        description: 'Build command to run'
+        required: false
+        default: 'npm run build'
+        type: string
+      dist_dir:
+        description: 'Directory containing built files'
+        required: false
+        default: 'dist'
+        type: string
+      node_version:
+        required: false
+        default: '20'
+        type: string
+    secrets:
+      VPS_HOST:
+        required: true
+      VPS_SSH_KEY:
+        required: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node_version }}
+          cache: npm
+
+      - run: npm ci
+
+      - run: ${{ inputs.build_command }}
+
+      - name: Determine target path
+        id: target
+        run: |
+          if [ "${{ inputs.subdomain }}" = "root" ]; then
+            echo "path=/var/www/koraykural.com" >> $GITHUB_OUTPUT
+          else
+            echo "path=/var/www/${{ inputs.subdomain }}.koraykural.com" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Upload to VPS
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: deploy
+          key: ${{ secrets.VPS_SSH_KEY }}
+          source: ${{ inputs.dist_dir }}/
+          target: ${{ steps.target.outputs.path }}
+          strip_components: 1
+          rm: true
