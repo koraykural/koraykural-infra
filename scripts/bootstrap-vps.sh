@@ -5,7 +5,7 @@
 set -euo pipefail
 
 DOMAIN="koraykural.com"
-EMAIL="koray@koraykural.com"  # change to your email for Let's Encrypt notifications
+EMAIL="koraykural99@gmail.com"
 NGINX_CONF_DIR="/etc/nginx/sites-available"
 NGINX_ENABLED_DIR="/etc/nginx/sites-enabled"
 INFRA_DIR="/var/www/infra"
