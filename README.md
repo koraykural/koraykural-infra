@@ -18,11 +18,26 @@ scripts/
   deploy-backend.yml      reusable workflow for backend apps
 ```
 
+## DNS setup
+
+At your domain registrar, add these records pointing to your VPS IP:
+
+| Type | Name | Value |
+|------|------|-------|
+| `A` | `@` | `<VPS_IP>` |
+| `A` | `www` | `<VPS_IP>` |
+| `A` | `*` | `<VPS_IP>` |
+
+The wildcard `*` record covers all subdomains automatically — no new DNS record needed per project.
+
 ## First-time VPS setup
+
+The repo is private, so copy-paste the script manually:
 
 ```bash
 ssh root@<VPS_IP>
-bash <(curl -s https://raw.githubusercontent.com/koraykural/koraykural-infra/main/scripts/bootstrap-vps.sh)
+nano bootstrap-vps.sh   # paste contents of scripts/bootstrap-vps.sh
+bash bootstrap-vps.sh
 ```
 
 ## Adding a new project
@@ -30,7 +45,13 @@ bash <(curl -s https://raw.githubusercontent.com/koraykural/koraykural-infra/mai
 **Static site:**
 1. Copy `nginx/_template-static.conf` → `nginx/PROJECT_NAME.koraykural.com.conf`, replace `PROJECT_NAME`
 2. Push — CI auto-reloads nginx
-3. In the project repo, add `.github/workflows/deploy.yml`:
+3. SSH into VPS and get a cert for the subdomain:
+```bash
+certbot certonly --nginx --non-interactive --agree-tos \
+  --email koraykural99@gmail.com \
+  -d PROJECT_NAME.koraykural.com
+```
+4. In the project repo, add `.github/workflows/deploy.yml`:
 
 ```yaml
 on:
@@ -52,8 +73,14 @@ jobs:
 **Backend app:**
 1. Copy `nginx/_template-backend.conf` → `nginx/PROJECT_NAME.koraykural.com.conf`, replace `PROJECT_NAME` and `PORT`
 2. Push — CI auto-reloads nginx
-3. SSH into VPS, clone repo to `/var/www/PROJECT_NAME.koraykural.com`, run `pm2 start server.js --name PROJECT_NAME`
-4. In the project repo, add `.github/workflows/deploy.yml`:
+3. SSH into VPS and get a cert for the subdomain:
+```bash
+certbot certonly --nginx --non-interactive --agree-tos \
+  --email koraykural99@gmail.com \
+  -d PROJECT_NAME.koraykural.com
+```
+4. SSH into VPS, clone repo to `/var/www/PROJECT_NAME.koraykural.com`, run `pm2 start server.js --name PROJECT_NAME`
+5. In the project repo, add `.github/workflows/deploy.yml`:
 
 ```yaml
 on:
