@@ -15,8 +15,8 @@ echo "==> Symlinking new nginx configs (skipping templates)"
 for conf in "$INFRA_DIR"/nginx/*.conf; do
   name=$(basename "$conf")
   [[ "$name" == _template* ]] && continue
-  ln -sf "$conf" "$NGINX_CONF_DIR/$name"
-  ln -sf "$NGINX_CONF_DIR/$name" "$NGINX_ENABLED_DIR/$name"
+  sudo ln -sf "$conf" "$NGINX_CONF_DIR/$name"
+  sudo ln -sf "$NGINX_CONF_DIR/$name" "$NGINX_ENABLED_DIR/$name"
 done
 
 echo "==> Testing nginx config"
