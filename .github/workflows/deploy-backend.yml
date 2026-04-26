@@ -69,4 +69,5 @@ jobs:
             if [ -n "${{ inputs.build_command }}" ]; then
               ${{ inputs.build_command }}
             fi
-            pm2 restart ${{ inputs.pm2_name }}
+            set -a && [ -f .env ] && source .env && set +a
+            pm2 restart ${{ inputs.pm2_name }} --update-env
