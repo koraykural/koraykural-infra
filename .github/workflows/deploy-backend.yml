@@ -44,8 +44,6 @@ on:
         required: true
       VPS_SSH_KEY:
         required: true
-      DATABASE_URL:
-        required: false
 
 jobs:
   deploy:
@@ -53,13 +51,10 @@ jobs:
     steps:
       - name: Deploy on VPS
         uses: appleboy/ssh-action@v1
-        env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
         with:
           host: ${{ secrets.VPS_HOST }}
           username: deploy
           key: ${{ secrets.VPS_SSH_KEY }}
-          envs: DATABASE_URL
           script: |
             DIR="${{ inputs.app_dir }}"
             if [ -z "$DIR" ]; then
