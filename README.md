@@ -110,6 +110,32 @@ jobs:
       VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
 ```
 
+**Next.js SSR app:**
+
+Same as backend, but:
+- Use port 3000 in the nginx config
+- Start with pm2: `pm2 start npm --name PROJECT_NAME -- start`
+- Pass `build_command: npm run build` in the workflow so CI builds before restarting:
+
+```yaml
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    uses: koraykural/koraykural-infra/.github/workflows/deploy-backend.yml@main
+    with:
+      subdomain: PROJECT_NAME
+      pm2_name: PROJECT_NAME
+      build_command: npm run build
+    secrets:
+      VPS_HOST: ${{ secrets.VPS_HOST }}
+      VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+```
+
+If the app uses `node-cron` for scheduled tasks, no extra setup needed — pm2 keeps the process alive and cron runs inside it.
+
 ## GitHub Secrets
 
 Set these in each project repo (Settings → Secrets → Actions):
